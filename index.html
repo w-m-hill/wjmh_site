@@ -1,0 +1,178 @@
+<html><head><base href="wjmh.dev">
+    <title>wjmh</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0f0f1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #canvas-container {
+            position: relative;
+        }
+        #coming-soon-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+        #coming-soon-text {
+            color: #f7fff7;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="neuronCanvas"></canvas>
+        <div id="coming-soon-box">
+            <div id="coming-soon-text">wjmh<br>under construction</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('neuronCanvas');
+        const ctx = canvas.getContext('2d');
+        let neurons = [];
+        const maxNeurons = 80;
+        const minNeurons = 1;
+        let currentMaxNeurons = minNeurons;
+        const growthRate = 0.02;
+
+        // Stylish color palette
+        const colorPalette = [
+            '#ff6b6b', // Coral Red
+            '#4ecdc4', // Turquoise
+            '#45b7d1', // Sky Blue
+            '#f7fff7', // Off White
+            '#ffe66d'  // Pastel Yellow
+        ];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Neuron {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 8;
+                this.connections = [];
+                this.activationLevel = 0;
+                this.color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                this.lifespan = Math.random() * 800 + 200;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.1 + this.activationLevel * 0.9;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            drawConnections() {
+                this.connections.forEach(neuron => {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(neuron.x, neuron.y);
+                    ctx.strokeStyle = this.color;
+                    ctx.globalAlpha = 0.1 + this.activationLevel * 0.4;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                });
+            }
+
+            update() {
+                if (Math.random() < 0.02) {
+                    this.activate();
+                } else {
+                    this.activationLevel *= 0.98;
+                }
+                this.lifespan--;
+            }
+
+            activate() {
+                this.activationLevel = 1;
+                setTimeout(() => {
+                    this.connections.forEach(neuron => neuron.activate());
+                }, 200);
+            }
+        }
+
+        function addNeuron() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const neuron = new Neuron(x, y);
+            neurons.push(neuron);
+
+            neurons.forEach(otherNeuron => {
+                if (otherNeuron !== neuron && Math.random() < 0.25) {
+                    neuron.connections.push(otherNeuron);
+                }
+            });
+        }
+
+        function removeNeuron(index) {
+            neurons.splice(index, 1);
+        }
+
+        function updateNeurons() {
+            if (currentMaxNeurons < maxNeurons) {
+                currentMaxNeurons += growthRate;
+            }
+
+            if (neurons.length < Math.floor(currentMaxNeurons) && Math.random() < 0.1) {
+                addNeuron();
+            }
+
+            for (let i = neurons.length - 1; i >= 0; i--) {
+                if (neurons[i].lifespan <= 0) {
+                    removeNeuron(i);
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            updateNeurons();
+
+            neurons.forEach(neuron => {
+                neuron.update();
+                neuron.drawConnections();
+                neuron.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        addNeuron();
+        animate();
+    </script>
+</body>
+</html>
