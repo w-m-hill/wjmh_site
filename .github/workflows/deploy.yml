@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no root@140.82.21.28 '
+          ssh -o StrictHostKeyChecking=no deployuser@140.82.21.28 '
           cd /var/www/wjmh
           git pull origin main
           sudo systemctl restart nginx
